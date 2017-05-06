@@ -1,11 +1,7 @@
-import os
-import warnings
-
-import numpy as np
 import pandas as pd
-import seaborn as sns
+import numpy as np
 
-def feature_eng_forest(data_file_path, soil_file_path):
+def feature_eng_forest(data_file_path, soil_file_path, test=False):
 	try:
 		df = pd.read_csv(data_file_path, sep=',', header=0, index_col='Id')
 		soil_types = pd.read_csv(soil_file_path).set_index('Soil Type')
@@ -93,26 +89,46 @@ def feature_eng_forest(data_file_path, soil_file_path):
 		if col not in columns:
 			if col != 'Cover_Type':
 				columns.append(col)
-	columns.append('Cover_Type')
-
+	if test:
+		pass
+	else:
+		columns.append('Cover_Type')
 
 	df = df[columns]
 	df.fillna(0,inplace=True) # Replace nans with 0 for our soil type bins
-    
-	to_remove = [] # features to drop
-	for c in df.columns.tolist():
-		if df[c].std() == 0:
-			to_remove.append(c)
-	df = df.drop(to_remove, 1)
-	print("Dropped the following columns: \n")
-	for r in to_remove:
-		print (r)
+
+	if not test:    
+		to_remove = [] # features to drop
+		for c in df.columns.tolist():
+			if df[c].std() == 0:
+				to_remove.append(c)
+		df = df.drop(to_remove, 1)
+		print("Dropped the following columns: \n")
+		for r in to_remove:
+			print (r)
         
 	return df
 
-def forest_interactions(df): 
-	for i in range(df.shape[1]-1):
-		for j in range(54):
-			if i != j:
-				df[df.columns.tolist()[i]+"_"+df.columns.tolist()[j]] = df[df.columns.tolist()[i]]*df[df.columns.tolist()[j]]
+def forest_interactions(df, test=False): 
+	if test:
+		for i in range(df.shape[1]):
+			for j in range(54):
+				if i != j:
+					df[df.columns.tolist()[i]+"_"+df.columns.tolist()[j]] = df[df.columns.tolist()[i]]*df[df.columns.tolist()[j]]
+	else:
+		for i in range(df.shape[1]-1):
+			for j in range(54):
+				if i != j:
+					df[df.columns.tolist()[i]+"_"+df.columns.tolist()[j]] = df[df.columns.tolist()[i]]*df[df.columns.tolist()[j]]
+
+	if not test:    
+		to_remove = [] # features to drop
+		for c in df.columns.tolist():
+			if df[c].std() == 0:
+				to_remove.append(c)
+		df = df.drop(to_remove, 1)
+		print("Dropped the following columns: \n")
+		for r in to_remove:
+			print (r)
+            
 	return df
